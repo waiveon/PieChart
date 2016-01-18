@@ -27,6 +27,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
     private Paint mPieBorderPaint;
     private Paint mSelectedPiePaint;
     private Paint mTextPaint;
+    private Paint mCenterCirclePaint;
     
     private RectF mPieChartRectf;
     private RectF mSelectedPieRectf;
@@ -40,6 +41,11 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
     private float mPieTotalSize = -1;
     
     private int[] mPieColorArr;
+    
+    private double mCenterX;
+    private double mCenterY;
+    
+    private int mDiameter;
     
     public PieChartImageView(Context context) {
 	super(context);
@@ -59,13 +65,18 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	float startAngle = 0;
 	float pieSize = 0;
 
-	int criterionSize = -1;
-	
 	int left 	= -1;
 	int top 	= -1;
 	int right 	= -1;
 	int bottom 	= -1;
 	int margin	= -1;
+	
+	// TODO 화면 전환 시에만 다시 설정하는 것으로 변경 해보자
+	Rect rect = new Rect();
+	getDrawingRect(rect);
+	
+	mCenterX = rect.centerX();
+	mCenterY = rect.centerY();
 	
 	// 높이와 너비 중 작은 것을 기준으로 원을 그린다.
 	if (getWidth() > getHeight()) {
@@ -78,7 +89,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    left = getLeft() + margin;
 	    right = getRight() - margin;
 	    
-	    criterionSize = getHeight();
+	    mDiameter = getHeight();
 	} else {
 	    // 너비가 기준
 	    left = getLeft();
@@ -89,11 +100,11 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    top = getTop() + margin;
 	    bottom = getBottom() - margin;
 	    
-	    criterionSize = getWidth();
+	    mDiameter = getWidth();
 	}
 	
 	// 그냥 개인적으로 적당하다고 생각한 크기.. -_-;;
-	mPaddingSize = (int) (((double)1 / (double)20) * criterionSize);
+	mPaddingSize = (int) (((double)1 / (double)20) * mDiameter);
 	
 	// 파이 차트의 크기를 설정
 	mPieChartRectf = new RectF(
@@ -144,6 +155,8 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    }
 	    
 	    startAngle = startAngle + pieSize;
+	    
+	    // text를 그린다.
 	}
 	
 	// 선택된 파이를 그린다.
@@ -262,48 +275,34 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	mPiePaint = new Paint();
 	mPiePaint.setAntiAlias(true);
 	mPiePaint.setStyle(Paint.Style.FILL);
-	mPiePaint.setStrokeWidth(0.5f);
 	
 	// 테두리를 그리기 위한 기본 정보를 설정
 	mPieBorderPaint = new Paint();
 	mPieBorderPaint.setAntiAlias(true);
 	mPieBorderPaint.setStyle(Paint.Style.STROKE);
 	mPieBorderPaint.setStrokeJoin(Join.ROUND);
-	mPieBorderPaint.setStrokeWidth(0.5f);
+	mPieBorderPaint.setColor(Color.BLACK);
+	mPieBorderPaint.setStrokeWidth(1.5f);
 	// x, y 는 구성될 원형의 중점 좌표이며, radius 는 그라데이션이 구성될 반지름의 크기를 의미 합니다.
 //	mPieBorderPaint.setShader(new RadialGradient(80,80,70, Color.BLUE, Color.WHITE, TileMode.CLAMP));
 	// 선의 끝부분을 둥글게 처리함
 //	mPieBorderPaint.setStrokeCap(Cap.ROUND);
 	
+	// 선택된 Pie를 표시
 	mSelectedPiePaint = new Paint();
 	mSelectedPiePaint.setAntiAlias(true);
 	mSelectedPiePaint.setStyle(Paint.Style.STROKE);
 	mSelectedPiePaint.setStrokeJoin(Join.ROUND);
 	
-	// draw bounding rect before rotating text
-	Rect rect = new Rect();
-//	paint.getTextBounds(str2rotate, 0, str2rotate.length(), rect);
-//	canvas.translate(x, y);
-//	paint.setStyle(Paint.Style.FILL);
-//	// draw unrotated text
-//	canvas.drawText("!Rotated", 0, 0, paint);
-//	paint.setStyle(Paint.Style.STROKE);
-//	canvas.drawRect(rect, paint);
-//	// undo the translate
-//	canvas.translate(-x, -y);
-//	
-//	// rotate the canvas on center of the text to draw
-//	canvas.rotate(-45, x + rect.exactCenterX(),
-//		y + rect.exactCenterY());
-//	// draw the rotated text
-//	paint.setStyle(Paint.Style.FILL);
-//	canvas.drawText(str2rotate, x, y, paint);
-//	
-//	//undo the rotate
-//	canvas.restore();
+	// 센터에 선택된 파이의 크기를 표시 하기 위한 원
+	mCenterCirclePaint = new Paint();
+	mCenterCirclePaint.setAntiAlias(true);
+	mCenterCirclePaint.setStyle(Paint.Style.FILL);
+	mCenterCirclePaint.setColor(Color.WHITE);
 	
 	mTextPaint = new Paint();
 	mTextPaint.setStyle(Paint.Style.FILL);
+	mTextPaint.setColor(Color.BLACK);
     }
     
     /** 파이를 클릭 했을 때 호출되는 callback 리스너를 설정한다.
@@ -330,6 +329,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
      * @param isSelectedPie 해당 파이의 선택 여부
      */
     private void drawPie(Canvas canvas, float drawPieStartAngle, float pieSize, int pieColor, boolean isSelectedPie) {
+	// Draw Pie
 	mPiePaint.setColor(pieColor);
 	
 	if (isSelectedPie == true) {
@@ -342,6 +342,68 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	
 	canvas.drawArc(mPieChartRectf, (int)drawPieStartAngle, (int)pieSize, true, mPieBorderPaint);
 	canvas.drawArc(mPieChartRectf, (int)drawPieStartAngle, (int)pieSize, true, mPiePaint);
+	
+	drawPieSize(canvas, ((mDiameter - mPaddingSize * 2) / 4), (drawPieStartAngle + (pieSize / 2)), toPercent(pieSize));
+	
+//	double a = (Math.pow(b, 2) + Math.pow(c, 2) - 2 * (b * c) * Math.cos(angle)) / 2
+		
+	// Draw Text
+//	canvas.translate(mCenterX + , mCenterY + );
+	
+	// draw bounding rect before rotating text
+//	paint.setStyle(Paint.Style.FILL);
+//	// draw unrotated text
+//	canvas.drawText("!Rotated", 0, 0, paint);
+//	paint.setStyle(Paint.Style.STROKE);
+//	canvas.drawRect(rect, paint);
+//	// undo the translate
+//	canvas.translate(-x, -y);
+//	
+//	// rotate the canvas on center of the text to draw
+//	canvas.rotate(-45, x + rect.exactCenterX(),
+//		y + rect.exactCenterY());
+//	// draw the rotated text
+//	paint.setStyle(Paint.Style.FILL);
+//	canvas.drawText(str2rotate, x, y, paint);
+//	
+//	//undo the rotate
+//	canvas.restore();
+    }
+    
+    private void drawPieSize(Canvas canvas, double radius, double angle, float pieSize) {
+	String pieSizeStr = (int) pieSize + " %";
+	TextPositionInfo textPositionInfo = getLocation(radius, angle);
+
+	canvas.save();
+	
+	mTextPaint.setTextSize(30);
+	
+	Rect rect = new Rect();
+	mTextPaint.getTextBounds(pieSizeStr, 0, pieSizeStr.length(), rect);
+	
+	Log.e(TAG, "LJS== pieSizeStr : " + pieSizeStr);
+	Log.e(TAG, "LJS== angle : " + angle);
+	Log.e(TAG, "LJS== textPositionInfo.x : " + textPositionInfo.getX());
+	Log.e(TAG, "LJS== textPositionInfo.y : " + textPositionInfo.getY());
+	Log.e(TAG, "LJS== rect.exactCenterX() : " + rect.exactCenterX());
+	Log.e(TAG, "LJS== rect.exactCenterY() : " + rect.exactCenterY());
+	Log.e(TAG, "LJS== rect.left : " + rect.left);
+	Log.e(TAG, "LJS== rect.right : " + rect.right);
+	Log.e(TAG, "LJS== rect.top : " + rect.top);
+	Log.e(TAG, "LJS== rect.bottom : " + rect.bottom);
+	
+	canvas.translate((float) textPositionInfo.getX() + rect.centerX(), (float) textPositionInfo.getY() + rect.centerY());
+	canvas.drawRect(rect, mTextPaint);
+	canvas.translate((float) -textPositionInfo.getX() + rect.centerX(), (float) -textPositionInfo.getY() + rect.centerY());
+	
+	// 이거 다시 체크
+	canvas.rotate((float) angle, (float) textPositionInfo.getX() + rect.centerX(), (float) textPositionInfo.getY() + rect.centerY());
+	canvas.drawText(pieSizeStr, 
+		(float) textPositionInfo.getX(), 
+		(float) textPositionInfo.getY(),
+		mTextPaint);
+	// 각도 돌린거 원복
+	canvas.restore();
     }
     
     /** 퍼센트로 받은 값을 각도로 변경한다.
@@ -357,4 +419,36 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	
 	return angles;
     }
+    
+    /** 각도를 퍼센트로 바꾼다.
+     * @param angle 각도
+     * @return 각도를 퍼센트로 변경한 값
+     */
+    private float toPercent(float angle) {
+	return (angle / 360) * 100;
+    }
+    
+    private TextPositionInfo getLocation(double radius, double angle) {
+	// (r * cos A, r * sin A)
+	
+	Log.e(TAG, "LJS== mCenterX : " + mCenterX);
+	Log.e(TAG, "LJS== mCenterY : " + mCenterY);
+	Log.e(TAG, "LJS== x : " + radius * Math.cos(Math.toRadians(angle)));
+	Log.e(TAG, "LJS== y : " + radius * Math.sin(Math.toRadians(angle)));
+	
+	TextPositionInfo textPositionInfo = new TextPositionInfo();
+	textPositionInfo.setX(radius * Math.cos(Math.toRadians(angle)), mCenterX);
+	textPositionInfo.setY(radius * Math.sin(Math.toRadians(angle)), mCenterY);
+	
+	return textPositionInfo;
+    }
+    
+//    private void getLowerBase(double b, double c, double angle) {
+//	// a^2 = b^2 + c^2 - 2bc * cosA
+//	;
+//	
+//	double t = Math.sqrt(Math.pow(b, 2) - Math.pow((a / 2) , 2));
+//	
+//	// a / 2, t
+//    }
 }

@@ -22,6 +22,7 @@ public class SamplePieChartActivity extends Activity {
 	
 	// 100%를 기준으로 만든 값
 	final float data_values[] = {20, 20, 25, 5, 15, 15};
+//	final float data_values[] = {40, 60};
 	int color_values[] = {Color.MAGENTA, Color.RED, Color.GREEN,Color.BLUE,Color.YELLOW,Color.CYAN};
 	
 	// 각도(Angle)를 기준으로 만든 값
