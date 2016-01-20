@@ -20,6 +20,9 @@ import com.sweetsound.piechart.listener.OnPieClickListener;
 public class PieChartImageView extends ImageView implements OnTouchListener {
     private static final String TAG = PieChartImageView.class.getSimpleName();
     
+    // 갤탭 1.0에서 해봤는데 30이 그 화면에서 적당 하더군..
+    private final int DEFAULT_TEXT_MAX_SIZE = 30;
+    
     private int mPaddingSize;
     private int mSelectPiePadding;
     
@@ -46,20 +49,39 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
     private double mCenterY;
     
     private int mDiameter;
+    private int mTextSize = DEFAULT_TEXT_MAX_SIZE;
+    
+    private SHOW_TEXT_TYPE mShowTextType;
+    
+    public enum SHOW_TEXT_TYPE {
+	CENTER,
+	OVERLAP,
+	HIDE
+    }
     
     public PieChartImageView(Context context) {
 	super(context);
+	
+	init();
     }
 
     public PieChartImageView(Context context, AttributeSet attrs) {
 	super(context, attrs);
+	
+	init();
     }
 
     public PieChartImageView(Context context, AttributeSet attrs,
 	    int defStyleAttr) {
 	super(context, attrs, defStyleAttr);
+	
+	init();
     }
 
+    private void init() {
+	mShowTextType = SHOW_TEXT_TYPE.HIDE;
+    }
+    
     @Override
     public void draw(Canvas canvas) {
 	float startAngle = 0;
@@ -321,6 +343,20 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	invalidate();
     }
     
+    /** 파이 Size를 표시 할 Text의 크기
+     * @param size Text 크기(픽셀)<br>기본 최대 크기는 30 이다.
+     */
+    public void setTextSize(int size) {
+	mTextSize = size;
+    }
+    
+    /** Text를 보여줄 타입을 설정한다.
+     * @param showTextType {@link SHOW_TEXT_TYPE}
+     */
+    public void setShowTextType(SHOW_TEXT_TYPE showTextType) {
+	mShowTextType = showTextType;
+    }
+    
     /** 파이를 그린다.
      * @param canvas 파이를 그릴 Canvas
      * @param drawPieStartAngle 파이 시작 각도
@@ -329,9 +365,10 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
      * @param isSelectedPie 해당 파이의 선택 여부
      */
     private void drawPie(Canvas canvas, float drawPieStartAngle, float pieSize, int pieColor, boolean isSelectedPie) {
-	// Draw Pie
+	// Pie 색 설정
 	mPiePaint.setColor(pieColor);
 	
+	// 선택된 Pie를 표시
 	if (isSelectedPie == true) {
 	    mSelectedPiePaint.setStrokeWidth(mSelectPiePadding);
 	    mSelectedPiePaint.setColor(pieColor);
@@ -340,68 +377,57 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    canvas.drawArc(mSelectedPieRectf, (int)drawPieStartAngle, (int)pieSize, !isSelectedPie, mSelectedPiePaint);
 	}
 	
+	// Pie의 검은색 테두리
 	canvas.drawArc(mPieChartRectf, (int)drawPieStartAngle, (int)pieSize, true, mPieBorderPaint);
+	// Pie를 그림
 	canvas.drawArc(mPieChartRectf, (int)drawPieStartAngle, (int)pieSize, true, mPiePaint);
 	
-	drawPieSize(canvas, ((mDiameter - mPaddingSize * 2) / 4), (drawPieStartAngle + (pieSize / 2)), toPercent(pieSize));
-	
-//	double a = (Math.pow(b, 2) + Math.pow(c, 2) - 2 * (b * c) * Math.cos(angle)) / 2
-		
-	// Draw Text
-//	canvas.translate(mCenterX + , mCenterY + );
-	
-	// draw bounding rect before rotating text
-//	paint.setStyle(Paint.Style.FILL);
-//	// draw unrotated text
-//	canvas.drawText("!Rotated", 0, 0, paint);
-//	paint.setStyle(Paint.Style.STROKE);
-//	canvas.drawRect(rect, paint);
-//	// undo the translate
-//	canvas.translate(-x, -y);
-//	
-//	// rotate the canvas on center of the text to draw
-//	canvas.rotate(-45, x + rect.exactCenterX(),
-//		y + rect.exactCenterY());
-//	// draw the rotated text
-//	paint.setStyle(Paint.Style.FILL);
-//	canvas.drawText(str2rotate, x, y, paint);
-//	
-//	//undo the rotate
-//	canvas.restore();
+	// Text를 보여줄 방식에 따라 Text를 그린다.
+	switch(mShowTextType) {
+	case OVERLAP:
+	    double radius = ((mDiameter - mPaddingSize * 2) / 2);
+	    
+	    drawPieSize(canvas, (radius * 3/5), (drawPieStartAngle + (pieSize / 2)), pieSize);
+	    break;
+	case CENTER:
+	    break;
+	case HIDE:
+	default:
+	    break;
+	}
     }
     
     private void drawPieSize(Canvas canvas, double radius, double angle, float pieSize) {
-	String pieSizeStr = (int) pieSize + " %";
+	String pieSizeStr = toPercent(pieSize) + " %";
 	TextPositionInfo textPositionInfo = getLocation(radius, angle);
 
+	// 현재 상태 저장
 	canvas.save();
 	
-	mTextPaint.setTextSize(30);
+	Log.e(TAG, "LJs== pieSizeStr : " + pieSizeStr);
 	
+	// Text 크기 설정
+	mTextPaint.setTextSize(getTextSize(radius, pieSize));
+	
+	// Text를 그릴 위치 선청을 위한 Text의 크기 값 가져 오기
 	Rect rect = new Rect();
 	mTextPaint.getTextBounds(pieSizeStr, 0, pieSizeStr.length(), rect);
 	
-	Log.e(TAG, "LJS== pieSizeStr : " + pieSizeStr);
-	Log.e(TAG, "LJS== angle : " + angle);
-	Log.e(TAG, "LJS== textPositionInfo.x : " + textPositionInfo.getX());
-	Log.e(TAG, "LJS== textPositionInfo.y : " + textPositionInfo.getY());
-	Log.e(TAG, "LJS== rect.exactCenterX() : " + rect.exactCenterX());
-	Log.e(TAG, "LJS== rect.exactCenterY() : " + rect.exactCenterY());
-	Log.e(TAG, "LJS== rect.left : " + rect.left);
-	Log.e(TAG, "LJS== rect.right : " + rect.right);
-	Log.e(TAG, "LJS== rect.top : " + rect.top);
-	Log.e(TAG, "LJS== rect.bottom : " + rect.bottom);
-	
-	canvas.translate((float) textPositionInfo.getX() + rect.centerX(), (float) textPositionInfo.getY() + rect.centerY());
-	canvas.drawRect(rect, mTextPaint);
-	canvas.translate((float) -textPositionInfo.getX() + rect.centerX(), (float) -textPositionInfo.getY() + rect.centerY());
-	
-	// 이거 다시 체크
-	canvas.rotate((float) angle, (float) textPositionInfo.getX() + rect.centerX(), (float) textPositionInfo.getY() + rect.centerY());
-	canvas.drawText(pieSizeStr, 
+	if (angle > 90 && angle < 270) {
+	    angle -= 180;
+	}
+
+	// 파이 위치에 따른 Text도 회전
+	canvas.rotate((float) angle, 
 		(float) textPositionInfo.getX(), 
-		(float) textPositionInfo.getY(),
+		(float) textPositionInfo.getY());
+	
+	// Text 그리기
+	canvas.drawText(pieSizeStr, 
+		(float) textPositionInfo.getX() - rect.centerX(), 
+		(float) textPositionInfo.getY() - rect.centerY(),
 		mTextPaint);
+	
 	// 각도 돌린거 원복
 	canvas.restore();
     }
@@ -424,18 +450,17 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
      * @param angle 각도
      * @return 각도를 퍼센트로 변경한 값
      */
-    private float toPercent(float angle) {
-	return (angle / 360) * 100;
+    private int toPercent(float angle) {
+	return (int) ((angle / 360) * 100);
     }
     
+    /** Overlab일 떄 텍스트를 보여주기 위한 위치를 계산하여 반환한다.
+     * @param radius 반지름
+     * @param angle 각도
+     * @return 텍스트를 보여줄 위치
+     */
     private TextPositionInfo getLocation(double radius, double angle) {
 	// (r * cos A, r * sin A)
-	
-	Log.e(TAG, "LJS== mCenterX : " + mCenterX);
-	Log.e(TAG, "LJS== mCenterY : " + mCenterY);
-	Log.e(TAG, "LJS== x : " + radius * Math.cos(Math.toRadians(angle)));
-	Log.e(TAG, "LJS== y : " + radius * Math.sin(Math.toRadians(angle)));
-	
 	TextPositionInfo textPositionInfo = new TextPositionInfo();
 	textPositionInfo.setX(radius * Math.cos(Math.toRadians(angle)), mCenterX);
 	textPositionInfo.setY(radius * Math.sin(Math.toRadians(angle)), mCenterY);
@@ -443,12 +468,34 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	return textPositionInfo;
     }
     
-//    private void getLowerBase(double b, double c, double angle) {
-//	// a^2 = b^2 + c^2 - 2bc * cosA
-//	;
-//	
-//	double t = Math.sqrt(Math.pow(b, 2) - Math.pow((a / 2) , 2));
-//	
-//	// a / 2, t
-//    }
+    /** 텍스트의 크기를 가져온다.
+     * @param hypotenuse 빗면
+     * @param angle 각도
+     * @return 밑면의 길이
+     */
+    private int getTextSize(double hypotenuse, double angle) {
+	int lowerBaseLine = -1;
+	
+	if (angle > 170) {
+	    lowerBaseLine = mTextSize;
+	} else {
+	    // 삼각함수를 이용하여 크기를 구한다.
+	    // a = b * sin(A/2)
+	    // 밑변의 1/2 크기정도면 될 것 같음..
+	    double baseLine = hypotenuse * Math.sin((Math.toRadians(angle / 2)));
+	    
+	    if (baseLine > mTextSize) {
+		lowerBaseLine = mTextSize;
+	    } else {
+		lowerBaseLine = (int) baseLine;
+	    }
+	    Log.e(TAG, "LJS== baseLine : " + baseLine);
+	}
+	
+	Log.e(TAG, "LJS== hypotenuse : " + hypotenuse);
+	Log.e(TAG, "LJS== angle : " + angle);
+	Log.e(TAG, "LJS== lowerBaseLine : " + lowerBaseLine);
+	
+	return lowerBaseLine;
+    }
 }

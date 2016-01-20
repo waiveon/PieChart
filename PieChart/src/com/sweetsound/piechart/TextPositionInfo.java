@@ -33,10 +33,6 @@ public class TextPositionInfo {
     }
     
     private double moveSymmetry(double centerCoordinate, double targetCoordinate) {
-	double distance = targetCoordinate * 2;
-	
-	Log.e(TAG, "LJS== distance : " + distance);
-	
-	return Math.abs((centerCoordinate + targetCoordinate) - distance);
+	return Math.abs((centerCoordinate + targetCoordinate) - (targetCoordinate * 2));
     }
 }
