@@ -6,8 +6,8 @@
 
  <com.sweetsound.piechart.PieChartImageView
      android:id="@+id/image_placeholder"
-     android:layout_width="200dip"
-     android:layout_height="200dip"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
      android:adjustViewBounds="false"
      android:scaleType="center" />
 

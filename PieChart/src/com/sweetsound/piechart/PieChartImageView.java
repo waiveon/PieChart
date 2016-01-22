@@ -19,9 +19,8 @@ import com.sweetsound.piechart.listener.OnPieClickListener;
 
 public class PieChartImageView extends ImageView implements OnTouchListener {
     private static final String TAG = PieChartImageView.class.getSimpleName();
-    
-    // 갤탭 1.0에서 해봤는데 30이 그 화면에서 적당 하더군..
-    private final int DEFAULT_TEXT_MAX_SIZE = 30;
+
+    private static final double DEFAULT_ANGLE_FOR_TEXT_SIZE = 20;
     
     private int mPaddingSize;
     private int mSelectPiePadding;
@@ -47,9 +46,10 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
     
     private double mCenterX;
     private double mCenterY;
+    private double mRadiusForTextSize = -1;
     
     private int mDiameter;
-    private int mTextSize = DEFAULT_TEXT_MAX_SIZE;
+    private int mTextSize = -1;
     
     private SHOW_TEXT_TYPE mShowTextType;
     
@@ -127,6 +127,14 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	
 	// 그냥 개인적으로 적당하다고 생각한 크기.. -_-;;
 	mPaddingSize = (int) (((double)1 / (double)20) * mDiameter);
+	
+	// 여기서 기본 크기를 정하자.. 위치는 이정도.. 
+	mRadiusForTextSize = ((mDiameter - mPaddingSize * 2) / 2) * 5/7;
+	
+	if (mTextSize == -1) {
+	    // 기본 크기는 이정도..
+	    mTextSize = (int) (mRadiusForTextSize * Math.sin((Math.toRadians(DEFAULT_ANGLE_FOR_TEXT_SIZE / 2))));
+	}
 	
 	// 파이 차트의 크기를 설정
 	mPieChartRectf = new RectF(
@@ -304,7 +312,6 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	mPieBorderPaint.setStyle(Paint.Style.STROKE);
 	mPieBorderPaint.setStrokeJoin(Join.ROUND);
 	mPieBorderPaint.setColor(Color.BLACK);
-	mPieBorderPaint.setStrokeWidth(1.5f);
 	// x, y 는 구성될 원형의 중점 좌표이며, radius 는 그라데이션이 구성될 반지름의 크기를 의미 합니다.
 //	mPieBorderPaint.setShader(new RadialGradient(80,80,70, Color.BLUE, Color.WHITE, TileMode.CLAMP));
 	// 선의 끝부분을 둥글게 처리함
@@ -324,6 +331,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	
 	mTextPaint = new Paint();
 	mTextPaint.setStyle(Paint.Style.FILL);
+	mTextPaint.setAntiAlias(true);
 	mTextPaint.setColor(Color.BLACK);
     }
     
@@ -375,6 +383,10 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    mSelectedPiePaint.setAlpha(70);
 	    
 	    canvas.drawArc(mSelectedPieRectf, (int)drawPieStartAngle, (int)pieSize, !isSelectedPie, mSelectedPiePaint);
+	    
+	    mPieBorderPaint.setStrokeWidth(4f);
+	} else {
+	    mPieBorderPaint.setStrokeWidth(1.5f);
 	}
 	
 	// Pie의 검은색 테두리
@@ -385,9 +397,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	// Text를 보여줄 방식에 따라 Text를 그린다.
 	switch(mShowTextType) {
 	case OVERLAP:
-	    double radius = ((mDiameter - mPaddingSize * 2) / 2);
-	    
-	    drawPieSize(canvas, (radius * 3/5), (drawPieStartAngle + (pieSize / 2)), pieSize);
+	    drawPieSize(canvas, mRadiusForTextSize, (drawPieStartAngle + (pieSize / 2)), pieSize);
 	    break;
 	case CENTER:
 	    break;
@@ -403,8 +413,6 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 
 	// 현재 상태 저장
 	canvas.save();
-	
-	Log.e(TAG, "LJs== pieSizeStr : " + pieSizeStr);
 	
 	// Text 크기 설정
 	mTextPaint.setTextSize(getTextSize(radius, pieSize));
@@ -489,12 +497,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    } else {
 		lowerBaseLine = (int) baseLine;
 	    }
-	    Log.e(TAG, "LJS== baseLine : " + baseLine);
 	}
-	
-	Log.e(TAG, "LJS== hypotenuse : " + hypotenuse);
-	Log.e(TAG, "LJS== angle : " + angle);
-	Log.e(TAG, "LJS== lowerBaseLine : " + lowerBaseLine);
 	
 	return lowerBaseLine;
     }
