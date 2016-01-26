@@ -384,7 +384,7 @@ public class PieChartImageView extends ImageView implements OnTouchListener {
 	    
 	    canvas.drawArc(mSelectedPieRectf, (int)drawPieStartAngle, (int)pieSize, !isSelectedPie, mSelectedPiePaint);
 	    
-	    mPieBorderPaint.setStrokeWidth(4f);
+	    mPieBorderPaint.setStrokeWidth(mPieChartRectf.width() / 40);
 	} else {
 	    mPieBorderPaint.setStrokeWidth(1.5f);
 	}
