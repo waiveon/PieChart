@@ -4,12 +4,11 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.sweetsound.piechart.ChartImageView.SHOW_TEXT_TYPE;
 import com.sweetsound.piechart.PieChartImageView;
 import com.sweetsound.piechart.R;
-import com.sweetsound.piechart.PieChartImageView.SHOW_TEXT_TYPE;
 import com.sweetsound.piechart.listener.OnPieClickListener;
 
 public class SamplePieChartActivity extends Activity {
