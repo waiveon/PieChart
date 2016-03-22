@@ -31,9 +31,9 @@ public class PieChartImageView extends ChartImageView implements OnTouchListener
      */
     protected void drawPie(Canvas canvas, float drawPieStartAngle, float pieSize) {
 	// Pie의 검은색 테두리
-	canvas.drawArc(mPieChartRectf, (int)drawPieStartAngle, (int)pieSize, true, mPieBorderPaint);
+	canvas.drawArc(mPieChartRectf, drawPieStartAngle, pieSize, true, mPieBorderPaint);
 	// Pie를 그림
-	canvas.drawArc(mPieChartRectf, (int)drawPieStartAngle, (int)pieSize, true, mPiePaint);
+	canvas.drawArc(mPieChartRectf, drawPieStartAngle, pieSize, true, mPiePaint);
 	
 	// Text를 보여줄 방식에 따라 Text를 그린다.
 	if (mShowTextType != SHOW_TEXT_TYPE.HIDE) {
